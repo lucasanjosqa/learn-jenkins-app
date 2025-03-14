@@ -1,22 +1,21 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18-alpine'
+            reuseNode true
+        }
+    }
 
     stages {
         stage('Build') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
             steps {
                 sh '''
-                    ls -la
+                    ls -l
                     node --version
                     npm --version
                     npm ci
                     npm run build
-                    ls -la
+                    ls -l
                 '''
             }
         }
@@ -25,15 +24,20 @@ pipeline {
             steps {
                 sh '''
                     echo "Test stage"
-                    test -f build/index.html && echo "index.html exists" || echo "index.html does not exist"
-                    # Se o junit.xml já existe, mova-o para o diretório test-results
+                    if test -f build/index.html; then
+                        echo "index.html exists"
+                    else
+                        echo "index.html does not exist"
+                        exit 1
+                    fi
+                    npm test || exit 1
                     mkdir -p test-results
                     if [ -f junit.xml ]; then
                         mv junit.xml test-results/junit.xml
-                    else
-                        echo "Warning: junit.xml not found in the workspace"
+                    elif [ ! -f test-results/junit.xml ]; then
+                        echo "Error: test-results/junit.xml not found"
+                        exit 1
                     fi
-                    npm test
                 '''
             }
         }
