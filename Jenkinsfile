@@ -21,11 +21,18 @@ pipeline {
             }
         }
 
-        stage('Test'){
-            steps{
+        stage('Test') {
+            steps {
                 sh '''
                     echo "Test stage"
-                    test -f build/index.html
+                    test -f build/index.html && echo "index.html exists" || echo "index.html does not exist"
+                    # Se o junit.xml já existe, mova-o para o diretório test-results
+                    mkdir -p test-results
+                    if [ -f junit.xml ]; then
+                        mv junit.xml test-results/junit.xml
+                    else
+                        echo "Warning: junit.xml not found in the workspace"
+                    fi
                 '''
             }
         }
