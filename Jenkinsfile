@@ -33,6 +33,7 @@ pipeline {
                     else
                         echo "Warning: junit.xml not found in the workspace"
                     fi
+                    npm test
                 '''
             }
         }
